@@ -67,7 +67,7 @@ recode <- function(file) {
   
   code <- function(x) if (x %in% c("C", "..")) x else NA
   num <- function(x) if (x %in% c("C", "..")) NA else as.numeric(x)
-  res <- fread(sprintf("data-raw/%s", file)) 
+  res <- fread(sprintf("data-raw/%s", file), encoding = "UTF-8") 
   colnames(res) <-  gsub("-", "_", tolower(colnames(res)))
   colnames(res)[grepl("^.*area_code_and_description$", colnames(res))] <-
     "area_code_and_description"
