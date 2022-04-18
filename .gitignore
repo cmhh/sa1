@@ -1,0 +1,7 @@
+.Rhistory
+.RData
+.Rproj.user
+data-raw
+output
+!output/sqlite/schemaspy.properties
+!output/sqlite/sqlite.properties
