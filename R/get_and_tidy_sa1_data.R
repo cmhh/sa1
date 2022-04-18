@@ -312,11 +312,6 @@ data.table::fwrite(z$metadata, "output/csv/metadata.csv.gz")
 data.table::fwrite(z$labels, "output/csv/labels.csv.gz")
 data.table::fwrite(z$data, "output/csv/data.csv.gz")
 
-DBI::dbAppendTable(con, "geo", geo)
-DBI::dbAppendTable(con, "metadata", z$metadata)
-DBI::dbAppendTable(con, "labels", z$labels)
-DBI::dbAppendTable(con, "data", z$data)
-
 # tidy up ----------------------------------------------------------------------
 rm(list=ls())
 gc()
