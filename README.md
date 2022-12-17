@@ -18,4 +18,25 @@ file                         | size on disk
 `output/csv/geo.csv.gz`      | 157Kb 
 `output/csv/metadata.csv.gz` | 1.2Kb
 `output/csv/labels.csv.gz`   | 4.8Kb
-`output/csv/data.csv.gz`     | 161Mb
+`output/csv/data.csv.gz`     | 160Mb
+
+A basic Docker set-up is included for non-R users who do not wish to install R permanently on their system.  To create the outputs, simply run:
+
+```bash
+docker build -t sa1 .
+```
+
+To create a database, ensure a folder called `output` exists:
+
+```bash
+mkdir output
+```
+
+and run Docker as follows
+
+```bash
+docker run -d --rm --name sa1 \
+  -v $PWD/output:/output \
+  -u $(id -u):$(id -g) \
+  sa1
+```

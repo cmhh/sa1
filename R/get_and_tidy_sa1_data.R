@@ -2,8 +2,13 @@ library(data.table)
 library(dplyr)
 library(stringr)
 
+# set locale -------------------------------------------------------------------
+Sys.setlocale(category = "LC_CTYPE", locale = "en_US.UTF8")
+Sys.setlocale(category = "LC_COLLATE", locale = "en_US.UTF8")
+
 # a little setup ---------------------------------------------------------------
-if (!dir.exists("data-raw")) dir.create("data-raw")
+workdir <- tempdir()
+if (!dir.exists(workdir)) dir.create(workdir, recursive = TRUE)
 if (!dir.exists("output/sqlite")) dir.create("output/sqlite", recursive = TRUE)
 if (!dir.exists("output/csv")) dir.create("output/csv", recursive = TRUE)
 
@@ -23,12 +28,12 @@ geo <- readRDS("data/geo.rds")
 # download SA1 long files
 download.file(
   "https://www3.stats.govt.nz/2018census/SA1Dataset/Statistical%20Area%201%20dataset%20for%20Census%202018%20%E2%80%93%20total%20New%20Zealand%20%E2%80%93%20Long%20format_updated_16-7-20.zip", 
-  destfile = "data-raw/data.zip"
+  destfile = sprintf("%s/data.zip", workdir)
 )
 
 # unzip the archive
 utils::unzip(
-  "data-raw/data.zip", exdir = "data-raw"
+  sprintf("%s/data.zip", workdir), exdir = workdir
 )
 
 # helper functions -------------------------------------------------------------
@@ -67,7 +72,7 @@ recode <- function(file) {
   
   code <- function(x) if (x %in% c("C", "..")) x else NA
   num <- function(x) if (x %in% c("C", "..")) NA else as.numeric(x)
-  res <- fread(sprintf("data-raw/%s", file), encoding = "UTF-8") 
+  res <- fread(sprintf("%s/%s", workdir, file), encoding = "UTF-8") 
   colnames(res) <-  gsub("-", "_", tolower(colnames(res)))
   colnames(res)[grepl("^.*area_code_and_description$", colnames(res))] <-
     "area_code_and_description"
@@ -200,9 +205,11 @@ refactor <- function(x, n) {
 
 # process all files, output sqlite db, and csv files ---------------------------
 ## create data -----------------------------------------------------------------
-files <- list.files(path = "data-raw", pattern = "*.csv", recursive = TRUE)
-x <- parallel::mclapply(files, recode_and_normalize, mc.cores = 2)
+files <- list.files(path = workdir, pattern = "*.csv", recursive = TRUE)
+x <- parallel::mclapply(files, recode_and_normalize, mc.cores = 1)
 z <- refactor(x)
+rm(x)
+gc()
 
 ## create SQLite database ------------------------------------------------------
 con <- DBI::dbConnect(RSQLite::SQLite(), "output/sqlite/sa1.db")
@@ -313,5 +320,6 @@ data.table::fwrite(z$labels, "output/csv/labels.csv.gz")
 data.table::fwrite(z$data, "output/csv/data.csv.gz")
 
 # tidy up ----------------------------------------------------------------------
+unlink(workdir, recursive = TRUE)
 rm(list=ls())
 gc()
